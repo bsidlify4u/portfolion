@@ -1,0 +1,18 @@
+<?php
+
+namespace {{ namespace }};
+
+use Portfolion\Http\Controller;
+use Portfolion\Http\Request;
+use Portfolion\Http\Response;
+
+class {{ class }} extends Controller
+{
+    /**
+     * Display the controller index page.
+     */
+    public function index(Request $request): Response
+    {
+        return new Response('Controller Method');
+    }
+} 

@@ -1,0 +1,58 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}Create Task{% endblock %}
+
+{% block content %}
+<h1>Create Task</h1>
+
+{% if errors is defined and errors is not empty %}
+    <div class="alert alert-danger">
+        <ul>
+            {% for field, message in errors %}
+                <li>{{ field }}: {{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<form action="/tasks" method="POST">
+    <div class="mb-3">
+        <label for="title" class="form-label">Title</label>
+        <input type="text" class="form-control" id="title" name="title" value="{{ data.title|default('') }}" required>
+    </div>
+    
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea class="form-control" id="description" name="description" rows="3">{{ data.description|default('') }}</textarea>
+    </div>
+    
+    <div class="mb-3">
+        <label for="status" class="form-label">Status</label>
+        <select class="form-select" id="status" name="status">
+            <option value="pending" {% if data.status is defined and data.status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="in_progress" {% if data.status is defined and data.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+            <option value="completed" {% if data.status is defined and data.status == 'completed' %}selected{% endif %}>Completed</option>
+            <option value="cancelled" {% if data.status is defined and data.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="priority" class="form-label">Priority</label>
+        <select class="form-select" id="priority" name="priority">
+            <option value="1" {% if data.priority is defined and data.priority == 1 %}selected{% endif %}>Low</option>
+            <option value="2" {% if data.priority is defined and data.priority == 2 %}selected{% endif %}>Medium</option>
+            <option value="3" {% if data.priority is defined and data.priority == 3 %}selected{% endif %}>High</option>
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="due_date" class="form-label">Due Date</label>
+        <input type="date" class="form-control" id="due_date" name="due_date" value="{{ data.due_date|default('') }}">
+    </div>
+    
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href="/tasks" class="btn btn-secondary me-md-2">Cancel</a>
+        <button type="submit" class="btn btn-primary">Create Task</button>
+    </div>
+</form>
+{% endblock %} 

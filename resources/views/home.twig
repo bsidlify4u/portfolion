@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>{{ title }}</h1>
+            <p>This page has been visited {{ visits }} times.</p>
+            <p>The framework is working with the following components:</p>
+            <ul>
+                <li>Routing ✅</li>
+                <li>Controllers ✅</li>
+                <li>Views (Twig) ✅</li>
+                <li>Cache ✅</li>
+                <li>Events ✅</li>
+                <li>Database ✅</li>
+                <li>Authentication ✅</li>
+                <li>Queue System ✅</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

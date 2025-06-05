@@ -1,0 +1,42 @@
+<?php
+
+namespace {{ namespace }};
+
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+
+class {{ class }} extends Command
+{
+    /**
+     * The name of the console command.
+     */
+    protected static $defaultName = '{{ command }}';
+
+    /**
+     * The console command description.
+     */
+    protected static $defaultDescription = 'Command description';
+
+    /**
+     * Configure the command options.
+     */
+    protected function configure(): void
+    {
+        // $this->addArgument('argument', InputArgument::REQUIRED, 'Argument description');
+        // $this->addOption('option', null, InputOption::VALUE_NONE, 'Option description');
+    }
+
+    /**
+     * Execute the console command.
+     */
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $io = new SymfonyStyle($input, $output);
+        
+        $io->success('Command executed successfully!');
+        
+        return Command::SUCCESS;
+    }
+} 

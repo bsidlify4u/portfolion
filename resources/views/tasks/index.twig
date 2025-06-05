@@ -1,0 +1,60 @@
+{% extends "layouts/app.twig" %}
+
+{% block title %}Tasks{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Tasks</h1>
+        <a href="/tasks/create" class="btn btn-primary">Create New Task</a>
+    </div>
+    
+    {% if tasks is empty %}
+        <div class="alert alert-info">
+            No tasks found. Create your first task!
+        </div>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Due Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td>{{ task.id }}</td>
+                        <td>{{ task.title }}</td>
+                        <td>
+                            <span class="badge {{ task.status == 'completed' ? 'bg-success' : 
+                                             (task.status == 'in_progress' ? 'bg-primary' : 
+                                             (task.status == 'cancelled' ? 'bg-danger' : 'bg-warning')) }}">
+                                {{ task.status|replace({'_': ' '})|title }}
+                            </span>
+                        </td>
+                        <td>{{ task.priority }}</td>
+                        <td>{{ task.due_date ? task.due_date|date('Y-m-d') : 'N/A' }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="/tasks/{{ task.id }}" class="btn btn-sm btn-info">View</a>
+                                <a href="/tasks/{{ task.id }}/edit" class="btn btn-sm btn-warning">Edit</a>
+                                <form method="POST" action="/tasks/{{ task.id }}" class="d-inline">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

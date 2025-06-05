@@ -1,0 +1,38 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow-xl rounded-lg p-6">
+    <h1 class="text-3xl font-bold text-red-800 mb-4">Error</h1>
+    
+    {% if app.debug %}
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p class="text-red-700 font-semibold">{{ message }}</p>
+            {% if file is defined %}
+                <p class="text-red-600 mt-2">
+                    <span class="font-semibold">File:</span> {{ file }}
+                </p>
+                <p class="text-red-600">
+                    <span class="font-semibold">Line:</span> {{ line }}
+                </p>
+            {% endif %}
+            
+            {% if trace is defined %}
+                <div class="mt-4">
+                    <h3 class="text-red-700 font-semibold mb-2">Stack Trace:</h3>
+                    <pre class="bg-red-100 p-4 rounded overflow-x-auto text-sm">{{ trace }}</pre>
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <p class="text-red-600">{{ message }}</p>
+    {% endif %}
+    
+    <div class="mt-6">
+        <a href="/" class="inline-block bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+            Return to Homepage
+        </a>
+    </div>
+</div>
+{% endblock %}

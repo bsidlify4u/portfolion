@@ -1,0 +1,31 @@
+<?php
+
+use Portfolion\Database\Migration;
+use Portfolion\Database\Schema\Blueprint;
+
+class {{ class }} extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up(): void
+    {
+        $this->table('{{ table }}', function (Blueprint $table) {
+            // Add columns or modify table here
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down(): void
+    {
+        $this->table('{{ table }}', function (Blueprint $table) {
+            // Reverse the changes made in the up method
+        });
+    }
+} 

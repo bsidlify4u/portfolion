@@ -1,0 +1,43 @@
+<?php
+
+namespace {{ namespace }};
+
+use Portfolion\Database\Model;
+
+class {{ class }} extends Model
+{
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected string $table;
+    
+    /**
+     * The primary key for the model.
+     *
+     * @var string
+     */
+    protected string $primaryKey = 'id';
+    
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected array $fillable = [];
+    
+    /**
+     * The attributes that should be hidden for arrays.
+     *
+     * @var array
+     */
+    protected array $hidden = [];
+    
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected array $casts = [];
+} 

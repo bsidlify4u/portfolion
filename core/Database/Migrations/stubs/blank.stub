@@ -1,0 +1,26 @@
+<?php
+
+use Portfolion\Database\Migration;
+
+class {{ class }} extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up(): void
+    {
+        // Implement migration logic here
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down(): void
+    {
+        // Implement rollback logic here
+    }
+} 

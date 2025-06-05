@@ -1,0 +1,78 @@
+<?php
+
+namespace Portfolion\Console\Commands;
+
+use App\Jobs\ExampleJob;
+use Portfolion\Console\Command;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use Portfolion\Queue\QueueManager;
+
+#[AsCommand(
+    name: 'queue:dispatch',
+    description: 'Dispatch a test job to the queue'
+)]
+class QueueDispatchCommand extends BaseCommand
+{
+    /**
+     * @var QueueManager Queue manager instance
+     */
+    protected $queue;
+    
+    /**
+     * Create a new queue dispatch command instance
+     * 
+     * @param QueueManager $queue Queue manager instance
+     */
+    public function __construct(QueueManager $queue = null)
+    {
+        parent::__construct();
+        $this->queue = $queue;
+    }
+    
+    /**
+     * Configure the command
+     * 
+     * @return void
+     */
+    protected function configure(): void
+    {
+        $this->addArgument('data', InputArgument::OPTIONAL, 'The data to process', 'test data');
+        $this->addOption('delay', 'd', InputOption::VALUE_REQUIRED, 'The delay in seconds', 0);
+        $this->addOption('queue', 'q', InputOption::VALUE_REQUIRED, 'The queue to dispatch to', 'default');
+    }
+    
+    /**
+     * Execute the command
+     * 
+     * @param InputInterface $input Command input
+     * @param OutputInterface $output Command output
+     * @return int Command exit code
+     */
+    protected function handle(InputInterface $input, OutputInterface $output): int
+    {
+        if ($this->queue === null) {
+            $output->writeln("<e>Error: Queue manager could not be initialized. Check the application configuration.</e>");
+            return Command::FAILURE;
+        }
+        
+        $data = $input->getArgument('data');
+        $delay = (int) $input->getOption('delay');
+        $queue = $input->getOption('queue');
+        
+        $job = new ExampleJob($data);
+        
+        if ($delay > 0) {
+            $this->queue->later($job, $delay, $queue);
+            $output->writeln("<s>Job dispatched to queue [{$queue}] with a delay of {$delay} seconds.</s>");
+        } else {
+            $this->queue->push($job, $queue);
+            $output->writeln("<s>Job dispatched to queue [{$queue}].</s>");
+        }
+        
+        return Command::SUCCESS;
+    }
+} 

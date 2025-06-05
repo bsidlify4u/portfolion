@@ -1,0 +1,28 @@
+<?php
+
+namespace {{ namespace }};
+
+use Closure;
+use Portfolion\Http\Request;
+use Portfolion\Http\Response;
+
+class {{ class }}
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Portfolion\Http\Request  $request
+     * @param  \Closure  $next
+     * @return mixed
+     */
+    public function handle(Request $request, Closure $next): mixed
+    {
+        // Perform actions before the request is handled
+        
+        $response = $next($request);
+        
+        // Perform actions after the request is handled
+        
+        return $response;
+    }
+} 

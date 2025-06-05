@@ -1,0 +1,61 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}Edit Task{% endblock %}
+
+{% block content %}
+<h1>Edit Task</h1>
+
+{% if errors is defined and errors is not empty %}
+    <div class="alert alert-danger">
+        <ul>
+            {% for field, message in errors %}
+                <li>{{ field }}: {{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<form action="/tasks/{{ task.id }}" method="POST">
+    <input type="hidden" name="_method" value="PUT">
+    
+    <div class="mb-3">
+        <label for="title" class="form-label">Title</label>
+        <input type="text" class="form-control" id="title" name="title" value="{{ task.title }}" required>
+    </div>
+    
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea class="form-control" id="description" name="description" rows="3">{{ task.description }}</textarea>
+    </div>
+    
+    <div class="mb-3">
+        <label for="status" class="form-label">Status</label>
+        <select class="form-select" id="status" name="status">
+            <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+            <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option>
+            <option value="cancelled" {% if task.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="priority" class="form-label">Priority</label>
+        <select class="form-select" id="priority" name="priority">
+            <option value="1" {% if task.priority == 1 %}selected{% endif %}>Low</option>
+            <option value="2" {% if task.priority == 2 %}selected{% endif %}>Medium</option>
+            <option value="3" {% if task.priority == 3 %}selected{% endif %}>High</option>
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="due_date" class="form-label">Due Date</label>
+        <input type="date" class="form-control" id="due_date" name="due_date" 
+               value="{{ task.due_date is defined ? task.due_date|date('Y-m-d') : '' }}">
+    </div>
+    
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href="/tasks" class="btn btn-secondary me-md-2">Cancel</a>
+        <button type="submit" class="btn btn-primary">Update Task</button>
+    </div>
+</form>
+{% endblock %} 

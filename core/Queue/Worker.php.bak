@@ -1,0 +1,272 @@
+<?php
+
+namespace Portfolion\Queue;
+
+use Portfolion\Events\Event;
+use Exception;
+use Throwable;
+
+/**
+ * Queue worker for the Portfolion framework
+ */
+class Worker
+{
+    /**
+     * @var QueueManager Queue manager instance
+     */
+    protected $manager;
+    
+    /**
+     * @var bool Whether the worker should stop processing jobs
+     */
+    protected $shouldQuit = false;
+    
+    /**
+     * Create a new worker instance
+     * 
+     * @param QueueManager $manager Queue manager instance
+     */
+    public function __construct(QueueManager $manager = null)
+    {
+        // Simply store the manager or null
+        $this->manager = $manager;
+    }
+            }
+        } else {
+            $this->manager = $manager;
+        }
+    }
+    
+    /**
+     * Process the next job on the queue
+     * 
+     * @param string $connection The connection name
+     * @param string $queue The queue name
+     * @param int $timeout The timeout in seconds
+     * @param int $sleep The number of seconds to sleep when no job is available
+     * @param int $maxTries The maximum number of attempts
+     * @return void
+     */
+    public function runNextJob(string $connection, string $queue, int $timeout = 60, int $sleep = 3, int $maxTries = 0): void
+    {
+        try {
+            $job = $this->getNextJob($connection, $queue);
+            
+            if ($job) {
+                $this->process($connection, $job, $maxTries, $timeout);
+            } else {
+                $this->sleep($sleep);
+            }
+        } catch (Exception $e) {
+            $this->handleWorkerException($e);
+            $this->sleep($sleep);
+        }
+    }
+    
+    /**
+     * Process jobs from the queue until stopped
+     * 
+     * @param string $connection The connection name
+     * @param string $queue The queue name
+     * @param int $timeout The timeout in seconds
+     * @param int $sleep The number of seconds to sleep when no job is available
+     * @param int $maxTries The maximum number of attempts
+     * @return void
+     */
+    public function daemon(string $connection, string $queue, int $timeout = 60, int $sleep = 3, int $maxTries = 0): void
+    {
+        while (!$this->shouldQuit) {
+            $this->runNextJob($connection, $queue, $timeout, $sleep, $maxTries);
+        }
+    }
+    
+    /**
+     * Get the next job from the queue
+     * 
+     * @param string $connection The connection name
+     * @param string $queue The queue name
+     * @return mixed The job or null
+     */
+    protected function getNextJob(string $connection, string $queue)
+    {
+        // Check if manager is available
+        if ($this->manager === null) {
+            error_log("Queue manager is not initialized");
+            return null;
+        }
+        
+        try {
+            return $this->manager->pop($queue);
+        } catch (Exception $e) {
+            $this->handleWorkerException($e);
+            return null;
+        }
+    }
+    
+    /**
+     * Process a job from the queue
+     * 
+     * @param string $connection The connection name
+     * @param mixed $job The job to process
+     * @param int $maxTries The maximum number of attempts
+     * @param int $timeout The timeout in seconds
+     * @return void
+     */
+    protected function process(string $connection, $job, int $maxTries = 0, int $timeout = 60): void
+    {
+        try {
+            // Fire the job.processing event
+            Event::dispatch('job.processing', [$connection, $job]);
+            
+            // Process the job
+            $this->runJob($job, $maxTries, $timeout);
+            
+            // Fire the job.processed event
+            Event::dispatch('job.processed', [$connection, $job]);
+        } catch (Exception $e) {
+            // Fire the job.failed event
+            Event::dispatch('job.failed', [$connection, $job, $e]);
+            
+            $this->handleJobException($job, $e);
+        }
+    }
+    
+    /**
+     * Run a job from the queue
+     * 
+     * @param mixed $job The job to run
+     * @param int $maxTries The maximum number of attempts
+     * @param int $timeout The timeout in seconds
+     * @return void
+     */
+    protected function runJob($job, int $maxTries = 0, int $timeout = 60): void
+    {
+        $jobInstance = unserialize($job['job']);
+        
+        // Set a timeout for the job
+        $this->setJobTimeout($timeout);
+        
+        try {
+            // Run the job
+            $jobInstance->handle();
+            
+            // Delete the job from the queue
+            $this->manager->delete($job);
+        } catch (Exception $e) {
+            // Handle job failure
+            $this->handleJobFailure($job, $jobInstance, $e, $maxTries);
+        } finally {
+            // Reset the timeout
+            $this->resetJobTimeout();
+        }
+    }
+    
+    /**
+     * Handle a job failure
+     * 
+     * @param mixed $job The job that failed
+     * @param mixed $instance The job instance
+     * @param Exception $exception The exception that caused the failure
+     * @param int $maxTries The maximum number of attempts
+     * @return void
+     */
+    protected function handleJobFailure($job, $instance, Exception $exception, int $maxTries = 0): void
+    {
+        // Call the failed method on the job
+        try {
+            $instance->failed($exception);
+        } catch (Exception $e) {
+            // Ignore exceptions from the failed method
+        }
+        
+        // Determine if the job should be retried
+        $attempts = $job['attempts'] ?? 1;
+        $maxTries = $maxTries > 0 ? $maxTries : ($instance->tries ?? 3);
+        
+        if ($attempts < $maxTries && $instance->shouldRetry($exception, $attempts)) {
+            // Release the job back onto the queue
+            $delay = $instance->retryDelay($attempts);
+            $this->manager->release($job, $delay);
+        } else {
+            // Delete the job from the queue
+            $this->manager->delete($job);
+        }
+    }
+    
+    /**
+     * Handle a worker exception
+     * 
+     * @param Exception $exception The exception that occurred
+     * @return void
+     */
+    protected function handleWorkerException(Exception $exception): void
+    {
+        // Log the exception
+        error_log("Worker error: " . $exception->getMessage());
+        
+        // Fire the worker.error event
+        Event::dispatch('worker.error', [$exception]);
+    }
+    
+    /**
+     * Handle a job exception
+     * 
+     * @param mixed $job The job that failed
+     * @param Exception $exception The exception that occurred
+     * @return void
+     */
+    protected function handleJobException($job, Exception $exception): void
+    {
+        // Log the exception
+        error_log("Job error: " . $exception->getMessage());
+        
+        // Fire the job.exception event
+        Event::dispatch('job.exception', [$job, $exception]);
+    }
+    
+    /**
+     * Set a timeout for the job
+     * 
+     * @param int $timeout The timeout in seconds
+     * @return void
+     */
+    protected function setJobTimeout(int $timeout): void
+    {
+        if (function_exists('pcntl_alarm')) {
+            pcntl_alarm($timeout);
+        }
+    }
+    
+    /**
+     * Reset the job timeout
+     * 
+     * @return void
+     */
+    protected function resetJobTimeout(): void
+    {
+        if (function_exists('pcntl_alarm')) {
+            pcntl_alarm(0);
+        }
+    }
+    
+    /**
+     * Sleep for the given number of seconds
+     * 
+     * @param int $seconds The number of seconds to sleep
+     * @return void
+     */
+    protected function sleep(int $seconds): void
+    {
+        sleep($seconds);
+    }
+    
+    /**
+     * Stop processing jobs
+     * 
+     * @return void
+     */
+    public function stop(): void
+    {
+        $this->shouldQuit = true;
+    }
+} 

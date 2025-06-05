@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory suffix="Test.php">./tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory suffix="Test.php">./tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Http">
+            <directory suffix="Test.php">./tests/Http</directory>
+        </testsuite>
+        <testsuite name="Core">
+            <directory suffix="Test.php">./tests/Core</directory>
+        </testsuite>
+        <testsuite name="Queue">
+            <directory suffix="Test.php">./tests/Queue</directory>
+        </testsuite>
+        <testsuite name="Auth">
+            <directory suffix="Test.php">./tests/Auth</directory>
+        </testsuite>
+        <testsuite name="Database">
+            <directory suffix="Test.php">./tests/Database</directory>
+        </testsuite>
+        <testsuite name="Config">
+            <directory suffix="Test.php">./tests/Config</directory>
+        </testsuite>
+        <testsuite name="Container">
+            <directory suffix="Test.php">./tests/Container</directory>
+        </testsuite>
+        <testsuite name="Routing">
+            <directory suffix="Test.php">./tests/Routing</directory>
+        </testsuite>
+        <testsuite name="Cache">
+            <directory suffix="Test.php">./tests/Cache</directory>
+        </testsuite>
+        <testsuite name="Session">
+            <directory suffix="Test.php">./tests/Session</directory>
+        </testsuite>
+        <testsuite name="View">
+            <directory suffix="Test.php">./tests/View</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value="storage/database/testing.sqlite"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <env name="SESSION_DRIVER" value="array"/>
+    </php>
+</phpunit>

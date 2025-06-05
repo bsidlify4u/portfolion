@@ -1,0 +1,66 @@
+<?php
+
+namespace {{ namespace }};
+
+use Portfolion\Http\Controller;
+use Portfolion\Http\Request;
+use Portfolion\Http\Response;
+
+class {{ class }} extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): Response
+    {
+        return new Response()->json([
+            'data' => [],
+        ]);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request): Response
+    {
+        return new Response()->json([
+            'data' => [],
+            'message' => 'Resource created successfully',
+        ], 201);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Request $request, int $id): Response
+    {
+        return new Response()->json([
+            'data' => [
+                'id' => $id,
+            ],
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, int $id): Response
+    {
+        return new Response()->json([
+            'data' => [
+                'id' => $id,
+            ],
+            'message' => 'Resource updated successfully',
+        ]);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Request $request, int $id): Response
+    {
+        return new Response()->json([
+            'message' => 'Resource deleted successfully',
+        ]);
+    }
+} 
