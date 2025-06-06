@@ -16,23 +16,74 @@ class HomeController extends Controller {
         $this->events = EventDispatcher::getInstance();
     }
     
-    public function index(Request $request, Response $response) {
-        // Test cache
-        $visits = $this->cache->remember('visits', 3600, function() {
-            return 0;
-        });
-        
-        $this->cache->put('visits', $visits + 1);
-        
-        // Test event dispatch
-        $this->events->dispatch(new class extends \Portfolion\Events\Event {
-            public $message = 'Home page visited';
-        });
-        
+    /**
+     * Display the home page
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function index(Request $request) {
         return $this->view('home', [
             'title' => 'Welcome to Portfolion',
-            'visits' => $visits + 1
+            'description' => 'A lightweight, modern PHP framework for building web applications and APIs.',
+            'features' => [
+                'MVC Architecture',
+                'Routing System',
+                'Database ORM',
+                'Migration System',
+                'Command Line Interface',
+                'Caching System',
+                'Task Scheduling',
+                'Middleware Support',
+                'Template Engine'
+            ]
         ]);
+    }
+
+    /**
+     * Display the about page
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function about(Request $request) {
+        return $this->view('about', [
+            'title' => 'About Portfolion',
+            'content' => 'Portfolion is a lightweight, modern PHP framework designed to make web development simple, flexible, and enjoyable.'
+        ]);
+    }
+
+    /**
+     * Display the contact page
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function contact(Request $request) {
+        return $this->view('contact', [
+            'title' => 'Contact Us'
+        ]);
+    }
+
+    /**
+     * Process the contact form
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function submitContact(Request $request) {
+        // Validate the request
+        $validated = $request->validate([
+            'name' => 'required|min:2',
+            'email' => 'required|email',
+            'message' => 'required|min:10'
+        ]);
+
+        // Process the contact form (e.g., send email)
+        // ...
+
+        // Redirect with success message
+        return $this->redirect('/contact')->with('success', 'Your message has been sent!');
     }
     
     public function test(Request $request, Response $response) {

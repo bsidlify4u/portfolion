@@ -1,55 +1,51 @@
 <?php
 
 /**
- * Schedule configuration for Portfolion
- * 
- * This file defines the scheduled tasks that will be run by the scheduler.
- * You can define tasks with different frequencies and customize when they run.
+ * Task Scheduling Configuration
+ *
+ * This file defines scheduled tasks for the application.
+ * Use the Schedule class to define tasks that should run at specific intervals.
  */
 
-return [
-    // Daily task example - runs once per day at midnight
-    [
-        'description' => 'Clear expired cache entries',
-        'expression' => 'daily',
-        'at_hour' => 0,
-        'at_minute' => 0,
-        'command' => 'php portfolion cache:clear',
-    ],
+use Portfolion\Schedule\Schedule;
+
+return function (Schedule $schedule) {
+    // Run a command every day at midnight
+    $schedule->command('cache:clear')
+             ->daily();
     
-    // Hourly task example - runs once per hour
-    [
-        'description' => 'Process queued jobs',
-        'expression' => 'hourly',
-        'command' => 'php portfolion queue:work --once',
-    ],
+    // Run a command every hour
+    $schedule->command('queue:work --stop-when-empty')
+             ->hourly();
     
-    // Custom schedule example - runs at specific times
-    [
-        'description' => 'Generate site map',
-        'days_of_week' => [1, 4], // Monday and Thursday
-        'hours' => [3], // At 3 AM
-        'minutes' => [0], // At minute 0
-        'command' => 'php portfolion sitemap:generate',
-    ],
+    // Run a command every Monday at 8:00 AM
+    $schedule->command('app:send-weekly-report')
+             ->weekly()
+             ->mondays()
+             ->at('8:00');
     
-    // Task with PHP callback example
-    [
-        'description' => 'Clean temporary files',
-        'expression' => 'daily',
-        'at_hour' => 2,
-        'at_minute' => 0,
-        'callback' => function() {
-            // This function will be called when the task is due
-            $tempDir = 'storage/temp';
-            if (is_dir($tempDir)) {
-                $files = glob($tempDir . '/*');
-                foreach ($files as $file) {
-                    if (is_file($file) && time() - filemtime($file) > 86400) { // 24 hours
-                        unlink($file);
-                    }
+    // Run a custom function every 30 minutes
+    $schedule->call(function () {
+        // Clean up temporary files
+        $tempDir = storage_path('app/temp');
+        $files = glob($tempDir . '/*');
+        $now = time();
+        
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                if ($now - filemtime($file) >= 60 * 60) { // 1 hour old
+                    unlink($file);
                 }
             }
-        },
-    ],
-]; 
+        }
+    })->everyThirtyMinutes();
+    
+    // Run a job class every day at 1:00 AM
+    $schedule->job('App\Jobs\DatabaseBackup')
+             ->dailyAt('1:00')
+             ->environments(['production']);
+    
+    // Run a shell command every day at 3:00 AM
+    $schedule->exec('php -r "file_put_contents(\'storage/logs/last_exec.log\', date(\'Y-m-d H:i:s\'));"')
+             ->dailyAt('3:00');
+}; 

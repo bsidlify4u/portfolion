@@ -1,0 +1,58 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Composer dependencies
+/vendor/
+composer.lock
+
+# Node modules
+/node_modules/
+package-lock.json
+
+# Storage files
+/storage/logs/*
+/storage/cache/*
+/storage/sessions/*
+/storage/app/*
+!/storage/app/public/
+/storage/app/public/*
+!/storage/logs/.gitkeep
+!/storage/cache/.gitkeep
+!/storage/sessions/.gitkeep
+!/storage/app/.gitkeep
+!/storage/app/public/.gitkeep
+
+# Database files
+*.sqlite
+*.sqlite-journal
+*.db
+
+# IDE and editor files
+/.idea/
+/.vscode/
+*.sublime-project
+*.sublime-workspace
+*.komodoproject
+.komodotools
+*.code-workspace
+.DS_Store
+Thumbs.db
+
+# Testing files
+.phpunit.result.cache
+/coverage/
+
+# Build files
+/public/assets/
+/public/build/
+/public/hot
+/public/storage
+
+# Temporary files
+*.log
+*.cache
+*.tmp
+*.swp
+*.swo 
