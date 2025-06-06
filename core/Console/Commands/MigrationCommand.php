@@ -5,6 +5,8 @@ namespace Portfolion\Console\Commands;
 use Portfolion\Console\Command;
 use Portfolion\Database\Connection;
 use Portfolion\Database\Migration;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class MigrationCommand extends Command
 {
@@ -22,6 +24,28 @@ class MigrationCommand extends Command
      * Database connection
      */
     protected ?Connection $connection = null;
+    
+    /**
+     * Run the command
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int 0 if everything went fine, or an exit code
+     */
+    public function run(InputInterface $input, OutputInterface $output): int
+    {
+        // Convert Symfony Console input to array of arguments
+        $args = [];
+        foreach ($input->getOptions() as $option => $value) {
+            if ($value === true) {
+                $args[] = "--{$option}";
+            } elseif ($value !== false && $value !== null) {
+                $args[] = "--{$option}={$value}";
+            }
+        }
+        
+        return $this->execute($args);
+    }
     
     /**
      * Execute the command

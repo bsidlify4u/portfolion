@@ -14,6 +14,8 @@ use Portfolion\Console\Commands\TestSetupCommand;
 use Portfolion\Console\Commands\TestCommand;
 use Portfolion\Console\Commands\TestMigrateCommand;
 use Portfolion\Console\Commands\CacheTestCommand;
+use Portfolion\Console\Commands\CacheClearCommand;
+use Portfolion\Console\Commands\ScheduleRunCommand;
 use Portfolion\Console\Commands\QueueWorkCommand;
 use Portfolion\Console\Commands\QueueMigrateCommand;
 use Portfolion\Console\Commands\QueueDispatchCommand;
@@ -65,6 +67,9 @@ class Application
             'test' => new TestCommand(),
             // Cache commands
             'cache:test' => new CacheTestCommand(),
+            'cache:clear' => new CacheClearCommand(),
+            // Schedule commands
+            'schedule:run' => new ScheduleRunCommand(),
             // Queue commands
             'queue:work' => new QueueWorkCommand(),
             'queue:migrate' => new QueueMigrateCommand(),
@@ -105,8 +110,9 @@ class Application
             $cmdObj = $this->commands[$command];
             
             try {
-                // Simple argument parsing for now
+                // Process arguments for Symfony Console Input
                 $parameters = [];
+                $namedArguments = [];
                 
                 foreach ($args as $arg) {
                     // Handle --option=value format
@@ -124,16 +130,42 @@ class Application
                         $optName = substr($arg, 1);
                         $parameters["--{$optName}"] = true;
                     }
+                    // This is a regular argument
+                    else {
+                        $namedArguments[] = $arg;
+                    }
+                }
+                
+                // Special handling for the command's actual arguments
+                if ($command === 'make:controller' || $command === 'make:model') {
+                    // For these commands, first argument is the name
+                    if (!empty($namedArguments)) {
+                        $args = [$namedArguments[0]]; // The name
+                        
+                        // Add any option flags
+                        foreach ($parameters as $key => $value) {
+                            if ($value === true) {
+                                $args[] = $key;
+                            } else {
+                                $args[] = "{$key}={$value}";
+                            }
+                        }
+                    }
                 }
                 
                 $input = new \Symfony\Component\Console\Input\ArrayInput($parameters);
                 $output = new ConsoleOutput();
                 
-                // Run the command
-                $cmdObj->run($input, $output);
+                // Run the command - passing arguments directly to execute()
+                if ($command === 'make:controller' || $command === 'make:model') {
+                    $cmdObj->execute($args);
+                } else {
+                    // Use the run method for other commands
+                    $cmdObj->run($input, $output);
+                }
             } catch (\Exception $e) {
                 $output = new ConsoleOutput();
-                $output->writeln("<e>Error: {$e->getMessage()}</e>");
+                $output->writeln("<error>Error: {$e->getMessage()}</error>");
                 exit(1);
             }
         } else {

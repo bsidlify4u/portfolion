@@ -18,6 +18,11 @@ use RuntimeException;
 class CacheManager
 {
     /**
+     * @var CacheManager|null The singleton instance
+     */
+    protected static ?CacheManager $instance = null;
+    
+    /**
      * @var array Available cache drivers
      */
     protected array $drivers = [];
@@ -36,6 +41,20 @@ class CacheManager
      * @var string Default cache driver
      */
     protected string $defaultDriver;
+    
+    /**
+     * Get the singleton instance
+     * 
+     * @return CacheManager
+     */
+    public static function getInstance(): CacheManager
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        
+        return self::$instance;
+    }
     
     /**
      * Create a new cache manager instance
