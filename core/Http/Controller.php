@@ -1,26 +1,86 @@
 <?php
 namespace Portfolion\Http;
 
-use Portfolion\View\TwigTemplate;
+use Portfolion\View\ViewManager;
 
-class Controller {
-    protected ?TwigTemplate $twig = null;
-    
-    public function __construct() {
-        // Initialize Twig
-        try {
-            $this->twig = new TwigTemplate();
-        } catch (\Exception $e) {
-            throw new \RuntimeException('Failed to initialize Twig: ' . $e->getMessage());
-        }
+abstract class Controller
+{
+    /**
+     * Render a view
+     *
+     * @param string $view View name
+     * @param array $data View data
+     * @param string|null $engine View engine (null for default)
+     * @return Response
+     */
+    protected function view(string $view, array $data = [], ?string $engine = null): Response
+    {
+        $viewManager = ViewManager::getInstance();
+        $content = $viewManager->render($view, $data, $engine);
+        
+        return new Response($content);
     }
     
-    protected function view(string $name, array $data = []): string {
-        try {
-            return $this->twig->render($name, $data);
-        } catch (\Exception $e) {
-            throw new \RuntimeException('Failed to render view: ' . $e->getMessage());
+    /**
+     * Return JSON response
+     *
+     * @param mixed $data Response data
+     * @param int $status HTTP status code
+     * @param array $headers Response headers
+     * @return Response
+     */
+    protected function json($data, int $status = 200, array $headers = []): Response
+    {
+        $response = new Response(
+            json_encode($data),
+            $status,
+            array_merge(['Content-Type' => 'application/json'], $headers)
+        );
+        
+        return $response;
+    }
+    
+    /**
+     * Redirect to a URL
+     *
+     * @param string $url URL to redirect to
+     * @param int $status HTTP status code
+     * @param array $headers Response headers
+     * @return Response
+     */
+    protected function redirect(string $url, int $status = 302, array $headers = []): Response
+    {
+        $response = new Response('', $status, array_merge(['Location' => $url], $headers));
+        
+        return $response;
+    }
+    
+    /**
+     * Return a file download response
+     *
+     * @param string $path File path
+     * @param string|null $name File name
+     * @param array $headers Response headers
+     * @return Response
+     */
+    protected function download(string $path, ?string $name = null, array $headers = []): Response
+    {
+        if (!file_exists($path)) {
+            throw new \Exception("File not found: {$path}");
         }
+        
+        $filename = $name ?? basename($path);
+        $mime = mime_content_type($path) ?: 'application/octet-stream';
+        
+        $headers = array_merge([
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Length' => filesize($path),
+        ], $headers);
+        
+        $response = new Response(file_get_contents($path), 200, $headers);
+        
+        return $response;
     }
     
     // Legacy method for PHP templates
@@ -29,17 +89,6 @@ class Controller {
         ob_start();
         include __DIR__ . '/../../app/Views/' . $name . '.php';
         return ob_get_clean();
-    }
-    
-    protected function json($data, int $status = 200): string {
-        header('Content-Type: application/json');
-        http_response_code($status);
-        return json_encode($data);
-    }
-    
-    protected function redirect(string $url): void {
-        header("Location: $url");
-        exit;
     }
     
     protected function validate(array $data, array $rules): array {

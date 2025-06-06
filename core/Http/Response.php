@@ -7,13 +7,37 @@ use Portfolion\View\TwigTemplate;
 use RuntimeException;
 
 class Response {
-    private mixed $content = '';
-    private int $status = 200;
-    private array $headers = [];
+    /**
+     * @var string Response content
+     */
+    protected string $content;
+    
+    /**
+     * @var int HTTP status code
+     */
+    protected int $status;
+    
+    /**
+     * @var array Response headers
+     */
+    protected array $headers;
+    
+    /**
+     * @var array Flash messages
+     */
+    protected array $flash = [];
+    
     private ?TwigTemplate $twig = null;
     private bool $isSent = false;
     
-    public function __construct(mixed $content = '', int $status = 200, array $headers = []) {
+    /**
+     * Response constructor.
+     *
+     * @param string $content Response content
+     * @param int $status HTTP status code
+     * @param array $headers Response headers
+     */
+    public function __construct(string $content = '', int $status = 200, array $headers = []) {
         $this->content = $content;
         $this->status = $status;
         $this->headers = $headers;
@@ -26,57 +50,170 @@ class Response {
         }
     }
     
-    public function setContent(mixed $content): self {
+    /**
+     * Set response content
+     *
+     * @param string $content Response content
+     * @return self
+     */
+    public function setContent(string $content): self {
         $this->content = $content;
         return $this;
     }
     
-    public function getContent(): mixed {
+    /**
+     * Get response content
+     *
+     * @return string
+     */
+    public function getContent(): string {
         return $this->content;
     }
     
-    public function setStatusCode(int $status): self {
-        if ($status < 100 || $status > 599) {
-            throw new InvalidArgumentException('HTTP status code must be between 100 and 599');
-        }
+    /**
+     * Set HTTP status code
+     *
+     * @param int $status HTTP status code
+     * @return self
+     */
+    public function setStatus(int $status): self {
         $this->status = $status;
         return $this;
     }
     
-    public function getStatusCode(): int {
+    /**
+     * Get HTTP status code
+     *
+     * @return int
+     */
+    public function getStatus(): int {
         return $this->status;
     }
     
-    public function addHeader(string $key, string $value): self {
-        $this->headers[$this->normalizeHeaderName($key)] = $value;
+    /**
+     * Set response header
+     *
+     * @param string $name Header name
+     * @param string $value Header value
+     * @return self
+     */
+    public function setHeader(string $name, string $value): self {
+        $this->headers[$name] = $value;
         return $this;
     }
     
-    public function removeHeader(string $key): self {
-        unset($this->headers[$this->normalizeHeaderName($key)]);
+    /**
+     * Set multiple response headers
+     *
+     * @param array $headers Response headers
+     * @return self
+     */
+    public function setHeaders(array $headers): self {
+        $this->headers = array_merge($this->headers, $headers);
         return $this;
     }
     
-    public function getHeader(string $key): ?string {
-        return $this->headers[$this->normalizeHeaderName($key)] ?? null;
-    }
-    
+    /**
+     * Get response headers
+     *
+     * @return array
+     */
     public function getHeaders(): array {
         return $this->headers;
     }
     
-    public function json(mixed $data, int $status = 200, int $flags = 0): self {
-        try {
-            $content = json_encode($data, JSON_THROW_ON_ERROR | $flags);
-        } catch (JsonException $e) {
-            throw new RuntimeException('Failed to encode response as JSON: ' . $e->getMessage());
+    /**
+     * Add flash message
+     *
+     * @param string $key Flash key
+     * @param mixed $value Flash value
+     * @return self
+     */
+    public function with(string $key, $value): self {
+        $this->flash[$key] = $value;
+        
+        if (isset($_SESSION)) {
+            $_SESSION['_flash'][$key] = $value;
         }
         
-        $this->addHeader('Content-Type', 'application/json; charset=utf-8');
-        $this->setContent($content);
-        $this->setStatusCode($status);
-        
         return $this;
+    }
+    
+    /**
+     * Send the response
+     *
+     * @return void
+     */
+    public function send(): void {
+        if ($this->isSent) {
+            throw new RuntimeException('Response has already been sent');
+        }
+        
+        if (!headers_sent()) {
+            http_response_code($this->status);
+            
+            foreach ($this->headers as $name => $value) {
+                header("{$name}: {$value}");
+            }
+        }
+        
+        echo $this->content;
+        
+        $this->isSent = true;
+        
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+    }
+    
+    /**
+     * Create a JSON response
+     *
+     * @param mixed $data Response data
+     * @param int $status HTTP status code
+     * @param array $headers Response headers
+     * @return self
+     */
+    public static function json($data, int $status = 200, array $headers = []): self {
+        $headers = array_merge(['Content-Type' => 'application/json'], $headers);
+        
+        return new self(json_encode($data), $status, $headers);
+    }
+    
+    /**
+     * Create a redirect response
+     *
+     * @param string $url URL to redirect to
+     * @param int $status HTTP status code
+     * @return self
+     */
+    public static function redirect(string $url, int $status = 302): self {
+        return new self('', $status, ['Location' => $url]);
+    }
+    
+    /**
+     * Create a file download response
+     *
+     * @param string $path File path
+     * @param string|null $name File name
+     * @param array $headers Response headers
+     * @return self
+     */
+    public static function download(string $path, ?string $name = null, array $headers = []): self {
+        if (!file_exists($path)) {
+            throw new \Exception("File not found: {$path}");
+        }
+        
+        $filename = $name ?? basename($path);
+        $mime = mime_content_type($path) ?: 'application/octet-stream';
+        
+        $headers = array_merge([
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Length' => filesize($path),
+        ], $headers);
+        
+        return new self(file_get_contents($path), 200, $headers);
     }
     
     public function view(string $name, array $data = [], int $status = 200): self {
@@ -86,7 +223,7 @@ class Response {
             // Use Twig for rendering
             $content = $this->twig->render($name, $data);
             $this->setContent($content);
-            $this->setStatusCode($status);
+            $this->setStatus($status);
         } catch (\Exception $e) {
             throw new RuntimeException('Failed to render view: ' . $e->getMessage());
         }
@@ -105,80 +242,22 @@ class Response {
         $content = ob_get_clean();
         
         $this->setContent($content);
-        $this->setStatusCode($status);
+        $this->setStatus($status);
         return $this;
     }
     
-    public function redirect(string $url, int $status = 302): void {
-        if ($status < 300 || $status > 308) {
-            throw new InvalidArgumentException('Invalid redirect status code');
-        }
-        
-        $this->addHeader('Location', filter_var($url, FILTER_VALIDATE_URL) ? $url : '/' . ltrim($url, '/'));
-        $this->setStatusCode($status);
-        $this->send();
+    public function addHeader(string $key, string $value): self {
+        $this->headers[$this->normalizeHeaderName($key)] = $value;
+        return $this;
     }
     
-    public function download(string $path, ?string $name = null, bool $inline = false): void {
-        if (!is_file($path) || !is_readable($path)) {
-            throw new RuntimeException('File not found or not readable: ' . $path);
-        }
-        
-        $name = $name ?? basename($path);
-        $mimeType = mime_content_type($path) ?: 'application/octet-stream';
-        
-        $this->addHeader('Content-Type', $mimeType);
-        $this->addHeader('Content-Disposition', ($inline ? 'inline' : 'attachment') . '; filename="' . str_replace('"', '\\"', $name) . '"');
-        $this->addHeader('Content-Length', (string) filesize($path));
-        $this->addHeader('Cache-Control', 'private, no-transform, no-store, must-revalidate');
-        
-        $this->setContent(function() use ($path) {
-            $handle = fopen($path, 'rb');
-            if ($handle === false) {
-                throw new RuntimeException('Failed to open file: ' . $path);
-            }
-            
-            while (!feof($handle)) {
-                yield fread($handle, 8192);
-            }
-            
-            fclose($handle);
-        });
-        
-        $this->send();
+    public function removeHeader(string $key): self {
+        unset($this->headers[$this->normalizeHeaderName($key)]);
+        return $this;
     }
     
-    public function send(): void {
-        if ($this->isSent) {
-            throw new RuntimeException('Response has already been sent');
-        }
-        
-        if (!headers_sent()) {
-            http_response_code($this->status);
-            
-            foreach ($this->headers as $key => $value) {
-                header($key . ': ' . $value, true);
-            }
-        }
-        
-        if (is_callable($this->content)) {
-            foreach (($this->content)() as $chunk) {
-                echo $chunk;
-                if (connection_aborted()) {
-                    break;
-                }
-            }
-        } elseif (is_string($this->content) || is_numeric($this->content)) {
-            echo $this->content;
-        } elseif (!is_null($this->content)) {
-            throw new RuntimeException('Invalid response content type');
-        }
-        
-        $this->isSent = true;
-        
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        }
+    public function getHeader(string $key): ?string {
+        return $this->headers[$this->normalizeHeaderName($key)] ?? null;
     }
     
     private function normalizeHeaderName(string $name): string {
@@ -187,26 +266,5 @@ class Response {
             return ucfirst(strtolower($matches[1]));
         }, $name);
     }
-    
-    /**
-     * Flash a message to the session.
-     *
-     * @param string $key
-     * @param mixed $value
-     * @return $this
-     */
-    public function with(string $key, mixed $value): self
-    {
-        if (function_exists('session')) {
-            session()->flash($key, $value);
-        } else {
-            // Fallback if session helper is not available
-            if (session_status() === PHP_SESSION_NONE) {
-                session_start();
-            }
-            $_SESSION['flash'][$key] = $value;
-        }
-        
-        return $this;
-    }
 }
+

@@ -12,7 +12,7 @@ A lightweight, modern PHP framework for building web applications and APIs.
 - **Caching System** - Efficient caching mechanisms
 - **Task Scheduling** - Automated task scheduling
 - **Middleware Support** - Request/response filtering
-- **Template Engine** - Clean and efficient view rendering
+- **Multiple Template Engines** - Support for PHP, Twig, and Blade templating
 
 ## Requirements
 
@@ -70,10 +70,14 @@ portfolion/
 ├── resources/            # Resources
 │   ├── assets/           # Assets (CSS, JS, etc.)
 │   └── views/            # View templates
+│       ├── layouts/      # Layout templates
+│       └── partials/     # Partial templates
 ├── routes/               # Route definitions
 ├── storage/              # Storage files
 │   ├── app/              # Application storage
 │   ├── cache/            # Cache files
+│   │   ├── blade/        # Blade cache files
+│   │   └── twig/         # Twig cache files
 │   ├── logs/             # Log files
 │   └── sessions/         # Session files
 └── tests/                # Test files
@@ -218,6 +222,79 @@ Router::group(['prefix' => 'admin', 'middleware' => 'auth'], function() {
 Router::group(['prefix' => 'api'], function() {
     Router::get('/users', 'Api\UserController@index');
 });
+```
+
+## Template Engines
+
+Portfolion supports multiple template engines:
+
+### PHP Templates
+
+```php
+<!-- resources/views/welcome.php -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title><?= $title ?></title>
+</head>
+<body>
+    <h1><?= $title ?></h1>
+    <p><?= $content ?></p>
+</body>
+</html>
+```
+
+### Twig Templates
+
+```twig
+{# resources/views/welcome.twig #}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <p>{{ content }}</p>
+    
+    {% for item in items %}
+        <li>{{ item }}</li>
+    {% endfor %}
+</body>
+</html>
+```
+
+### Blade Templates
+
+```blade
+<!-- resources/views/welcome.blade.php -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ $title }}</title>
+</head>
+<body>
+    <h1>{{ $title }}</h1>
+    <p>{{ $content }}</p>
+    
+    @foreach($items as $item)
+        <li>{{ $item }}</li>
+    @endforeach
+</body>
+</html>
+```
+
+### Using Different Template Engines
+
+```php
+// Using the default template engine (configured in config/view.php)
+return $this->view('welcome', ['title' => 'Welcome']);
+
+// Using Twig
+return $this->view('welcome', ['title' => 'Welcome'], 'twig');
+
+// Using Blade
+return $this->view('welcome', ['title' => 'Welcome'], 'blade');
 ```
 
 ## Contributing

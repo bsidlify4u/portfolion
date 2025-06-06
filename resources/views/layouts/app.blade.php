@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Portfolion Framework{% endblock %}</title>
+    <title>@yield('title', 'Portfolion Framework')</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-    {% block styles %}{% endblock %}
+    @yield('styles')
 </head>
 <body>
     <header>
@@ -23,16 +23,16 @@
     </header>
 
     <main>
-        {% block content %}{% endblock %}
+        @yield('content')
     </main>
 
     <footer>
         <div class="container">
-            <p>&copy; {{ "now"|date("Y") }} Portfolion Framework. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} Portfolion Framework. All rights reserved.</p>
         </div>
     </footer>
 
     <script src="{{ asset('js/app.js') }}"></script>
-    {% block scripts %}{% endblock %}
+    @yield('scripts')
 </body>
 </html> 

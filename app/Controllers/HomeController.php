@@ -17,7 +17,7 @@ class HomeController extends Controller {
     }
     
     /**
-     * Display the home page
+     * Display the home page using the default view engine
      *
      * @param Request $request
      * @return Response
@@ -38,6 +38,54 @@ class HomeController extends Controller {
                 'Template Engine'
             ]
         ]);
+    }
+
+    /**
+     * Display the home page using Twig
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function indexTwig(Request $request) {
+        return $this->view('home', [
+            'title' => 'Welcome to Portfolion with Twig',
+            'description' => 'A lightweight, modern PHP framework for building web applications and APIs.',
+            'features' => [
+                'MVC Architecture',
+                'Routing System',
+                'Database ORM',
+                'Migration System',
+                'Command Line Interface',
+                'Caching System',
+                'Task Scheduling',
+                'Middleware Support',
+                'Twig Template Engine'
+            ]
+        ], 'twig');
+    }
+
+    /**
+     * Display the home page using Blade
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function indexBlade(Request $request) {
+        return $this->view('home', [
+            'title' => 'Welcome to Portfolion with Blade',
+            'description' => 'A lightweight, modern PHP framework for building web applications and APIs.',
+            'features' => [
+                'MVC Architecture',
+                'Routing System',
+                'Database ORM',
+                'Migration System',
+                'Command Line Interface',
+                'Caching System',
+                'Task Scheduling',
+                'Middleware Support',
+                'Blade Template Engine'
+            ]
+        ], 'blade');
     }
 
     /**
@@ -86,8 +134,8 @@ class HomeController extends Controller {
         return $this->redirect('/contact')->with('success', 'Your message has been sent!');
     }
     
-    public function test(Request $request, Response $response) {
-        return $response->json([
+    public function test(Request $request) {
+        return $this->json([
             'status' => 'success',
             'message' => 'Framework is working!'
         ]);

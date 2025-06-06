@@ -10,6 +10,8 @@ use Portfolion\Routing\Router;
 
 // Public routes
 Router::get('/', 'HomeController@index');
+Router::get('/twig', 'HomeController@indexTwig');
+Router::get('/blade', 'HomeController@indexBlade');
 Router::get('/about', 'HomeController@about');
 Router::get('/contact', 'HomeController@contact');
 Router::post('/contact', 'HomeController@submitContact');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title|default('Portfolion Framework') }}</title>
+    <title>{{ $title ?? 'Portfolion Framework' }}</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <style>
         body {
@@ -119,8 +119,8 @@
 
     <section class="hero">
         <div class="container">
-            <h2>{{ title }}</h2>
-            <p>{{ description|default('A lightweight, modern PHP framework for building web applications and APIs.') }}</p>
+            <h2>{{ $title }}</h2>
+            <p>{{ $description ?? 'A lightweight, modern PHP framework for building web applications and APIs.' }}</p>
             <a href="{{ url('docs') }}" class="btn">Get Started</a>
         </div>
     </section>
@@ -129,22 +129,22 @@
         <div class="container">
             <h2>Features</h2>
             <div class="feature-grid">
-                {% for feature in features %}
+                @foreach ($features as $feature)
                 <div class="feature-card">
-                    <h3>{{ feature }}</h3>
-                    <p>Experience the power and simplicity of the {{ feature }} in Portfolion Framework.</p>
+                    <h3>{{ $feature }}</h3>
+                    <p>Experience the power and simplicity of the {{ $feature }} in Portfolion Framework.</p>
                 </div>
-                {% endfor %}
+                @endforeach
             </div>
         </div>
     </section>
 
     <footer>
         <div class="container">
-            <p>&copy; {{ "now"|date("Y") }} Portfolion Framework. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} Portfolion Framework. All rights reserved.</p>
         </div>
     </footer>
 
     <script src="{{ asset('js/app.js') }}"></script>
 </body>
-</html>
+</html> 

@@ -53,11 +53,15 @@ $directories = [
     'database/seeds',
     'public',
     'resources/views',
+    'resources/views/layouts',
+    'resources/views/partials',
     'resources/assets/css',
     'resources/assets/js',
     'routes',
     'storage/app',
     'storage/cache',
+    'storage/cache/twig',
+    'storage/cache/blade',
     'storage/logs',
     'storage/sessions',
     'storage/uploads',
@@ -119,6 +123,71 @@ EOT;
 
 createFile('config/app.php', $appConfig);
 
+// View configuration
+$viewConfig = <<<'EOT'
+<?php
+
+return [
+    /*
+    |--------------------------------------------------------------------------
+    | Default View Engine
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the default view engine that will be used to render
+    | views. Supported: "php", "twig", "blade"
+    |
+    */
+    'default' => env('VIEW_ENGINE', 'php'),
+    
+    /*
+    |--------------------------------------------------------------------------
+    | View Paths
+    |--------------------------------------------------------------------------
+    |
+    | These are the paths where the framework will look for views.
+    |
+    */
+    'paths' => [
+        'php' => 'resources/views',
+        'twig' => 'resources/views',
+        'blade' => 'resources/views',
+    ],
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Twig Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the Twig environment options.
+    |
+    */
+    'twig' => [
+        'enabled' => true,
+        'cache' => env('VIEW_CACHE', false) ? 'storage/cache/twig' : false,
+        'debug' => env('APP_DEBUG', false),
+        'auto_reload' => true,
+        'strict_variables' => false,
+        'file_extension' => '.twig',
+    ],
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Blade Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the Blade compiler options.
+    |
+    */
+    'blade' => [
+        'enabled' => true,
+        'cache' => 'storage/cache/blade',
+        'file_extension' => '.blade.php',
+    ],
+];
+EOT;
+
+createFile('config/view.php', $viewConfig);
+
 // Cache configuration
 $cacheConfig = <<<'EOT'
 <?php
@@ -148,11 +217,8 @@ use Portfolion\Routing\Router;
 
 // Define your routes here
 Router::get('/', 'HomeController@index');
-
-// API routes
-Router::group(['prefix' => 'api'], function() {
-    Router::get('users', 'Api\UserController@index');
-});
+Router::get('/twig', 'HomeController@indexTwig');
+Router::get('/blade', 'HomeController@indexBlade');
 EOT;
 
 createFile('routes/web.php', $routesFile);
@@ -175,6 +241,8 @@ DB_PASSWORD=
 
 CACHE_DRIVER=file
 SESSION_DRIVER=file
+VIEW_ENGINE=php
+VIEW_CACHE=false
 EOT;
 
 createFile('.env.example', $envContent);
