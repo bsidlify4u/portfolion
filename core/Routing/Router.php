@@ -75,47 +75,103 @@ class Router {
     }
     
     /**
-     * Register a route for GET requests.
+     * Register a route for GET requests (instance method).
      *
      * @param string $uri
      * @param Closure|array{0: string, 1: string}|string $action
      * @return $this
      */
-    public function get(string $uri, Closure|array|string $action): self {
+    public function addGet(string $uri, Closure|array|string $action): self {
         return $this->addRoute('GET', $uri, $action);
     }
     
     /**
-     * Register a route for POST requests.
+     * Register a route for POST requests (instance method).
      *
      * @param string $uri
      * @param Closure|array{0: string, 1: string}|string $action
      * @return $this
      */
-    public function post(string $uri, Closure|array|string $action): self {
+    public function addPost(string $uri, Closure|array|string $action): self {
         return $this->addRoute('POST', $uri, $action);
     }
     
     /**
-     * Register a route for PUT requests.
+     * Register a route for PUT requests (instance method).
      *
      * @param string $uri
      * @param Closure|array{0: string, 1: string}|string $action
      * @return $this
      */
-    public function put(string $uri, Closure|array|string $action): self {
+    public function addPut(string $uri, Closure|array|string $action): self {
         return $this->addRoute('PUT', $uri, $action);
     }
     
     /**
-     * Register a route for DELETE requests.
+     * Register a route for DELETE requests (instance method).
      *
      * @param string $uri
      * @param Closure|array{0: string, 1: string}|string $action
      * @return $this
      */
-    public function delete(string $uri, Closure|array|string $action): self {
+    public function addDelete(string $uri, Closure|array|string $action): self {
         return $this->addRoute('DELETE', $uri, $action);
+    }
+    
+    /**
+     * Static method to register a GET route
+     *
+     * @param string $uri
+     * @param Closure|array{0: string, 1: string}|string $action
+     * @return Router
+     */
+    public static function get(string $uri, Closure|array|string $action): Router {
+        return self::getInstance()->addRoute('GET', $uri, $action);
+    }
+    
+    /**
+     * Static method to register a POST route
+     *
+     * @param string $uri
+     * @param Closure|array{0: string, 1: string}|string $action
+     * @return Router
+     */
+    public static function post(string $uri, Closure|array|string $action): Router {
+        return self::getInstance()->addRoute('POST', $uri, $action);
+    }
+    
+    /**
+     * Static method to register a PUT route
+     *
+     * @param string $uri
+     * @param Closure|array{0: string, 1: string}|string $action
+     * @return Router
+     */
+    public static function put(string $uri, Closure|array|string $action): Router {
+        return self::getInstance()->addRoute('PUT', $uri, $action);
+    }
+    
+    /**
+     * Static method to register a DELETE route
+     *
+     * @param string $uri
+     * @param Closure|array{0: string, 1: string}|string $action
+     * @return Router
+     */
+    public static function delete(string $uri, Closure|array|string $action): Router {
+        return self::getInstance()->addRoute('DELETE', $uri, $action);
+    }
+    
+    /**
+     * Static method to register a group of routes
+     *
+     * @param array $attributes
+     * @param Closure $callback
+     * @return void
+     */
+    public static function group(array $attributes, Closure $callback): void {
+        $router = self::getInstance();
+        $callback($router);
     }
     
     /**
