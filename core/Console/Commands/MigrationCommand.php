@@ -26,28 +26,6 @@ class MigrationCommand extends Command
     protected ?Connection $connection = null;
     
     /**
-     * Run the command
-     *
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @return int 0 if everything went fine, or an exit code
-     */
-    public function run(InputInterface $input, OutputInterface $output): int
-    {
-        // Convert Symfony Console input to array of arguments
-        $args = [];
-        foreach ($input->getOptions() as $option => $value) {
-            if ($value === true) {
-                $args[] = "--{$option}";
-            } elseif ($value !== false && $value !== null) {
-                $args[] = "--{$option}={$value}";
-            }
-        }
-        
-        return $this->execute($args);
-    }
-    
-    /**
      * Execute the command
      *
      * @param array $args Command arguments
@@ -94,9 +72,32 @@ class MigrationCommand extends Command
         
         // Get all migration files
         $migrations = $this->getMigrationFiles();
+        $this->line("Found migration files: " . implode(", ", $migrations));
         
         // Get completed migrations
         $completedMigrations = $this->getCompletedMigrations();
+        $this->line("Completed migrations: " . implode(", ", $completedMigrations));
+        
+        // Check for problematic records
+        try {
+            $query = "SELECT * FROM migrations WHERE migration = 'Table'";
+            $stmt = $this->connection->getPdo()->query($query);
+            $problematicRecords = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            if (!empty($problematicRecords)) {
+                $this->line("Found problematic migration records. Deleting...");
+                
+                // Delete problematic records
+                $deleteQuery = "DELETE FROM migrations WHERE migration = 'Table'";
+                $this->connection->getPdo()->exec($deleteQuery);
+                
+                // Refresh completed migrations
+                $completedMigrations = $this->getCompletedMigrations();
+                $this->line("Completed migrations after cleanup: " . implode(", ", $completedMigrations));
+            }
+        } catch (\Exception $e) {
+            $this->line("Error checking for problematic records: " . $e->getMessage());
+        }
         
         // Determine which migrations to run
         $pendingMigrations = array_diff($migrations, $completedMigrations);
@@ -110,8 +111,14 @@ class MigrationCommand extends Command
         
         // Run each pending migration
         foreach ($pendingMigrations as $migration) {
-            $this->runMigration($migration);
-            $this->line('  - ' . $migration);
+            try {
+                $this->line("  - Processing: {$migration}");
+                $this->runMigration($migration);
+                $this->line("  - Completed: {$migration}");
+            } catch (\Exception $e) {
+                $this->error("  - Failed: {$migration} - " . $e->getMessage());
+                throw $e;
+            }
         }
     }
     
